@@ -1,0 +1,162 @@
+//grasshopper c# mac IDE
+
+//using 
+using System.IO;
+using System.Linq;
+using System.Data;
+using System.Drawing;
+using System.Reflection;
+using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Linq;
+using System.Runtime.InteropServices;
+using Rhino.DocObjects;
+using Rhino.Collections;
+using GH_IO;
+using GH_IO.Serialization;
+
+//script
+
+//read image files for reference
+string ndviPath = "Users/Joe/Documents/Cornell/2021_2022_Fall/studio/_meshifiedGameOfLife/exports/ndvi.png";
+Bitmap ndviImage = new Bitmap(ndviPath);
+int nx = ndviImage.Width;
+int ny = ndviImage.Height;
+string landCoverPath = "Users/Joe/Documents/Cornell/2021_2022_Fall/studio/_meshifiedGameOfLife/exports/landcover.png";
+Bitmap landCoverImage = new Bitmap(landCoverPath);
+string srtmPath = "Users/Joe/Documents/Cornell/2021_2022_Fall/studio/_meshifiedGameOfLife/exports/srtm.png";
+Bitmap srtmImage = new Bitmap(srtmPath);
+
+//build point set for mesh
+int pointCount = nx*ny/100;
+int xMax = nx;
+int yMax = ny;
+var rand = new Random();
+List<Point3d> pointList = new List<Point3d>();
+for (int i = 0; i < pointCount; ++i) {
+    //generate random coordinates
+    double x = rand.NextDouble() * (xMax-1);
+    double y = rand.NextDouble() * (yMax-1);
+    Point3d p = new Point3d(x, -1*y+(yMax-1), 0.0);
+    //sample point coordinates and generate random value
+    //compare to determine point survival for dithering
+    Color c = ndviImage.GetPixel(Convert.ToInt32(x), Convert.ToInt32(y));
+    double b = c.GetBrightness();
+    if (rand.NextDouble() >= b/2.0){
+        pointList.Add(p);
+        } else {
+            continue;
+            }
+    };
+
+A = pointList;
+
+//delaunay
+var nodes = new Grasshopper.Kernel.Geometry.Node2List();
+for (int i = 0; i < pointList.Count; i++) {
+    nodes.Append(new Grasshopper.Kernel.Geometry.Node2(pointList[i].X, pointList[i].Y));
+    };
+var delMesh = new Mesh();
+var faces = new List<Grasshopper.Kernel.Geometry.Delaunay.Face>();
+faces = Grasshopper.Kernel.Geometry.Delaunay.Solver.Solve_Faces(nodes, 1);
+delMesh = Grasshopper.Kernel.Geometry.Delaunay.Solver.Solve_Mesh(nodes, 1, ref faces);
+
+//move delaunay to Z values
+for (int i = 0; i < delMesh.Vertices.Count; i++) {
+    double positX = delMesh.Vertices[i].X;
+    double positY = delMesh.Vertices[i].Y;
+    Color s = srtmImage.GetPixel(Convert.ToInt32(positX), Convert.ToInt32(-1*positY+(yMax-1)));
+    double z = s.GetBrightness();
+    Point3d moveVertex = new Point3d(positX, positY, z*100.0+rand.NextDouble());
+    delMesh.Vertices.SetVertex(i,moveVertex);
+    };
+
+//calculate normals
+delMesh.FaceNormals.ComputeFaceNormals();
+delMesh.Normals.ComputeNormals();
+
+//calculate colors
+for (int i = 0; i < delMesh.Vertices.Count; i++) {
+    double positX = delMesh.Vertices[i].X;
+    double positY = delMesh.Vertices[i].Y;
+
+    Color n = ndviImage.GetPixel(Convert.ToInt32(positX), Convert.ToInt32(-1*positY+(yMax-1)));
+    double ndviBright = n.GetBrightness();
+
+    if (ndviBright < 0.3) {
+        delMesh.VertexColors.Add(75,75,75);
+        } else {
+
+        Color c = landCoverImage.GetPixel(Convert.ToInt32(positX), Convert.ToInt32(-1*positY+(yMax-1)));
+
+        //figure out lighting vector diff from normal
+        double dif = Vector3d.VectorAngle(delMesh.Normals[i],new Vector3d(1.0,0.0,0.3));
+        //Print(Convert.ToString(dif));
+        double shading = dif / 2.0;
+        shading = Math.Sin(shading);
+
+        //set adjustments
+        double hueAdjust = c.GetHue() + (dif-3.1415926/2.0)*20.0;
+        double satAdjust = (Math.Sqrt(c.GetSaturation())/2.0 + (dif-3.1415926)/10.0)/2.0;
+        double valAdjust = Math.Sqrt(c.GetBrightness())+0.2-(shading/2.0);
+
+        //make sure values are in bounds
+        if ( hueAdjust > 360.0 ) { hueAdjust = 360.0; };
+        if ( satAdjust > 1.0 ) { satAdjust = 1.0; };
+        if ( valAdjust > 1.0 ) { valAdjust = 1.0; };
+        if ( hueAdjust < 0.0 ) { hueAdjust = 0.0; };
+        if ( satAdjust < 0.0 ) { satAdjust = 0.0; };
+        if ( valAdjust < 0.0 ) { valAdjust = 0.0; };
+
+        List<int> rgbMod = RGBfromHSV( hueAdjust, satAdjust, valAdjust );
+        delMesh.VertexColors.Add(rgbMod[0],rgbMod[1],rgbMod[2]);
+        };
+    }
+
+M = delMesh;
+
+
+
+//overrides
+double hue2rgb ( double p, double q, double t ) {
+    if (t<0.0) {t+=1.0;}
+    if (t>1.0) {t-=1.0;}
+    if (t<1.0/6.0) {return p + (q - p) * 6.0 * t;}
+    if (t<1.0/2.0) {return q;}
+    if(t < 2.0/3.0) {return p + (q - p) * (2.0/3.0 - t) * 6.0;}
+    return p;
+    }
+
+List<int> RGBfromHSV(double h, double s, double v){
+    h = h /360.0;
+    double r = 0.0;
+    double g = 0.0;
+    double b = 0.0;
+
+    if (s == 0) {
+        r = v;
+        g = v;
+        b = v;
+        } else {
+        double q = v < 0.5 ? v * (1 + s) : v + s - v * s;
+        double p = 2 * v - q;
+        r = hue2rgb(p, q, h + 1.0/3.0);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1.0/3.0);
+        };
+
+    if (r>1.0) {r=1.0;}
+    if (g>1.0) {g=1.0;}
+    if (b>1.0) {b=1.0;}
+    if (r<0.0) {r=0.0;}
+    if (g<0.0) {g=0.0;}
+    if (b<0.0) {b=0.0;}
+
+    List<int> rgbList = new List<int>();
+    rgbList.Add(Convert.ToInt32(r*255.0));
+    rgbList.Add(Convert.ToInt32(g*255.0));
+    rgbList.Add(Convert.ToInt32(b*255.0));
+    return rgbList;
+    }
+    
+    

@@ -25,19 +25,19 @@ landcover = {
     'mosslichen': (250,230,160,255),
     'prep': (255,255,255,255),
     'settlement': (0,0,0,255),
-    'agf1': (0,200,0,255),
-    'agf2': (0,190,0,255),
-    'agf3': (0,180,0,255),
-    'agf4': (0,170,0,255),
-    'agf5': (0,160,0,255),
-    'agf6': (0,150,0,255),
-    'agf7': (0,140,0,255),
-    'agf8': (0,130,0,255),
-    'agf9': (0,120,0,255)
+    'agf1': (90,100,90,255),
+    'agf2': (80,100,80,255),
+    'agf3': (70,100,70,255),
+    'agf4': (60,100,60,255),
+    'agf5': (50,100,50,255),
+    'agf6': (40,100,40,255),
+    'agf7': (30,100,30,255),
+    'agf8': (20,100,20,255),
+    'agf9': (10,100,10,255)
     }
 
 #loop for generations
-generations = 10
+generations = 20
 for i in range(generations):
     im = Image.open("./landCoverFrames/gen{}.png".format(i))
     img = im
@@ -51,6 +51,8 @@ for i in range(generations):
             #check conditions
             #advance states
             if pixelMap[x,y] == landcover['prep']:
+                pixelMap2[x,y] = landcover['settlement']
+            if pixelMap[x,y] == landcover['settlement']:
                 pixelMap2[x,y] = landcover['agf1']
             elif pixelMap[x,y] == landcover['agf1']:
                 pixelMap2[x,y] = landcover['agf2']
@@ -70,9 +72,8 @@ for i in range(generations):
                 pixelMap2[x,y] = landcover['agf9']
             elif pixelMap[x,y] == landcover['agf9']:
                 pixelMap2[x,y] = landcover['trees']
-            
             #if grass, crop, barren
-            elif pixelMap[x,y] == landcover['cropland'] or pixelMap[x,y] == landcover['barren'] or pixelMap[x,y] == landcover['grassland']:
+            elif pixelMap[x,y] == landcover['cropland'] or pixelMap[x,y] == landcover['grassland']:
                 #add surrounding values to a list to check
                 adjacencies = []
                 adjacencies.append(pixelMap[x,y+1])
@@ -97,6 +98,15 @@ for i in range(generations):
                 adjLchen = 0
                 adjPreps = 0
                 adjStlmt = 0
+                agf1 = 0
+                agf2 = 0
+                agf3 = 0
+                agf4 = 0
+                agf5 = 0
+                agf6 = 0
+                agf7 = 0
+                agf8 = 0
+                agf9 = 0
                 for adjacency in adjacencies:
                     if adjacency == landcover['trees']:
                         adjTrees += 1
@@ -124,18 +134,35 @@ for i in range(generations):
                         adjPreps += 1
                     elif adjacency == landcover['settlement']:
                         adjStlmt += 1
+                    elif adjacency == landcover['agf1']:
+                        agf1 += 1
+                    elif adjacency == landcover['agf2']:
+                        agf2 += 1
+                    elif adjacency == landcover['agf3']:
+                        agf3 += 1
+                    elif adjacency == landcover['agf4']:
+                        agf4 += 1
+                    elif adjacency == landcover['agf5']:
+                        agf5 += 1
+                    elif adjacency == landcover['agf6']:
+                        agf6 += 1
+                    elif adjacency == landcover['agf7']:
+                        agf7 += 1
+                    elif adjacency == landcover['agf8']:
+                        agf8 += 1
+                    elif adjacency == landcover['agf9']:
+                        agf9 += 1
                     else:
                         continue
                 #check state and adjacencies:
-                if adjTrees + adjStlmt + adjPreps > 3:
+                if adjTrees + adjStlmt + agf1 + agf2 + agf3 + agf4 + agf5 + agf6 + agf7 + agf8 + agf9  > 3:
                     pixelMap2[x,y] = landcover['prep']
                 else:
-                    continue
+                    pixelMap2[x,y] = pixelMap[x,y]
             #if trees, shrub, build-up, snow, water, wetland, mangrove, moss, or any other, skip
             else:
                 pixelMap2[x,y] = pixelMap[x,y]
 
-  
     img.save("./landCoverFrames/gen{}.png".format(i+1)) 
     im.close()
     img.close()

@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Nov 16 09:44:29 2021
-
 @author: Joe
 """
 
 from PIL import Image
+import random
 
 #uses categories from ESA land cover 10 meter with extra 
 
@@ -48,7 +48,7 @@ landcover = {
 
 #loop for generations
 generations = 1000
-for i in range(48,generations):
+for i in range(generations):
     im = Image.open("./landCoverFrames/gen{}.png".format(i))
     img = im
     pixelMap = im.load()
@@ -60,9 +60,9 @@ for i in range(48,generations):
             y = k + 1
             #check conditions
             #advance states
-            if pixelMap[x,y] == landcover['prep']:
+            if pixelMap[x,y] == landcover['prep'] and random.random()>0.1:
                 pixelMap2[x,y] = landcover['settlement']
-            if pixelMap[x,y] == landcover['settlement']:
+            elif pixelMap[x,y] == landcover['settlement'] and random.random()>0.1:
                 pixelMap2[x,y] = landcover['agf1']
             elif pixelMap[x,y] == landcover['agf1']:
                 pixelMap2[x,y] = landcover['agf2']
@@ -215,7 +215,7 @@ for i in range(48,generations):
                     else:
                         continue
                 #check state and adjacencies:
-                if adjBuild + adjTrees + adjStlmt + agf1 + agf2 + agf3 + agf4 + agf5 + agf6 + agf7 + agf8 + agf9 + agf10 + agf11 + agf12 + agf13 + agf14 + agf15 + agf16 + agf17 + agf18 + agf19  > 3:
+                if adjBuild + adjTrees + adjStlmt + agf1 + agf2 + agf3 + agf4 + agf5 + agf6 + agf7 + agf8 + agf9 + agf10 + agf11 + agf12 + agf13 + agf14 + agf15 + agf16 + agf17 + agf18 + agf19  > 2:
                     pixelMap2[x,y] = landcover['prep']
                 else:
                     pixelMap2[x,y] = pixelMap[x,y]

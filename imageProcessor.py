@@ -25,20 +25,30 @@ landcover = {
     'mosslichen': (250,230,160,255),
     'prep': (255,255,255,255),
     'settlement': (0,0,0,255),
-    'agf1': (90,100,90,255),
-    'agf2': (80,100,80,255),
-    'agf3': (70,100,70,255),
-    'agf4': (60,100,60,255),
-    'agf5': (50,100,50,255),
-    'agf6': (40,100,40,255),
-    'agf7': (30,100,30,255),
-    'agf8': (20,100,20,255),
-    'agf9': (10,100,10,255)
+    'agf1': (190,200,190,255),
+    'agf2': (180,195,180,255),
+    'agf3': (170,190,170,255),
+    'agf4': (160,185,160,255),
+    'agf5': (150,180,150,255),
+    'agf6': (140,175,140,255),
+    'agf7': (130,170,130,255),
+    'agf8': (120,165,120,255),
+    'agf9': (110,160,110,255),
+    'agf10': (100,155,100,255),
+    'agf11': (90,150,90,255),
+    'agf12': (80,145,80,255),
+    'agf13': (70,140,70,255),
+    'agf14': (60,135,60,255),
+    'agf15': (50,130,50,255),
+    'agf16': (40,125,40,255),
+    'agf17': (30,120,30,255),
+    'agf18': (20,115,20,255),
+    'agf19': (10,110,10,255)
     }
 
 #loop for generations
-generations = 20
-for i in range(generations):
+generations = 1000
+for i in range(48,generations):
     im = Image.open("./landCoverFrames/gen{}.png".format(i))
     img = im
     pixelMap = im.load()
@@ -71,6 +81,26 @@ for i in range(generations):
             elif pixelMap[x,y] == landcover['agf8']:
                 pixelMap2[x,y] = landcover['agf9']
             elif pixelMap[x,y] == landcover['agf9']:
+                pixelMap2[x,y] = landcover['agf10']
+            elif pixelMap[x,y] == landcover['agf10']:
+                pixelMap2[x,y] = landcover['agf11']
+            elif pixelMap[x,y] == landcover['agf11']:
+                pixelMap2[x,y] = landcover['agf12']
+            elif pixelMap[x,y] == landcover['agf12']:
+                pixelMap2[x,y] = landcover['agf13']
+            elif pixelMap[x,y] == landcover['agf13']:
+                pixelMap2[x,y] = landcover['agf14']
+            elif pixelMap[x,y] == landcover['agf14']:
+                pixelMap2[x,y] = landcover['agf15']
+            elif pixelMap[x,y] == landcover['agf15']:
+                pixelMap2[x,y] = landcover['agf16']
+            elif pixelMap[x,y] == landcover['agf16']:
+                pixelMap2[x,y] = landcover['agf17']
+            elif pixelMap[x,y] == landcover['agf17']:
+                pixelMap2[x,y] = landcover['agf18']
+            elif pixelMap[x,y] == landcover['agf18']:
+                pixelMap2[x,y] = landcover['agf19']
+            elif pixelMap[x,y] == landcover['agf19']:
                 pixelMap2[x,y] = landcover['trees']
             #if grass, crop, barren
             elif pixelMap[x,y] == landcover['cropland'] or pixelMap[x,y] == landcover['grassland']:
@@ -107,6 +137,16 @@ for i in range(generations):
                 agf7 = 0
                 agf8 = 0
                 agf9 = 0
+                agf10 = 0
+                agf11 = 0
+                agf12 = 0
+                agf13 = 0
+                agf14 = 0
+                agf15 = 0
+                agf16 = 0
+                agf17 = 0
+                agf18 = 0
+                agf19 = 0
                 for adjacency in adjacencies:
                     if adjacency == landcover['trees']:
                         adjTrees += 1
@@ -152,10 +192,30 @@ for i in range(generations):
                         agf8 += 1
                     elif adjacency == landcover['agf9']:
                         agf9 += 1
+                    elif adjacency == landcover['agf10']:
+                        agf10 += 1
+                    elif adjacency == landcover['agf11']:
+                        agf11 += 1
+                    elif adjacency == landcover['agf12']:
+                        agf12 += 1
+                    elif adjacency == landcover['agf13']:
+                        agf13 += 1
+                    elif adjacency == landcover['agf14']:
+                        agf14 += 1
+                    elif adjacency == landcover['agf15']:
+                        agf15 += 1
+                    elif adjacency == landcover['agf16']:
+                        agf16 += 1
+                    elif adjacency == landcover['agf17']:
+                        agf17 += 1
+                    elif adjacency == landcover['agf18']:
+                        agf18 += 1
+                    elif adjacency == landcover['agf19']:
+                        agf19 += 1
                     else:
                         continue
                 #check state and adjacencies:
-                if adjTrees + adjStlmt + agf1 + agf2 + agf3 + agf4 + agf5 + agf6 + agf7 + agf8 + agf9  > 3:
+                if adjBuild + adjTrees + adjStlmt + agf1 + agf2 + agf3 + agf4 + agf5 + agf6 + agf7 + agf8 + agf9 + agf10 + agf11 + agf12 + agf13 + agf14 + agf15 + agf16 + agf17 + agf18 + agf19  > 3:
                     pixelMap2[x,y] = landcover['prep']
                 else:
                     pixelMap2[x,y] = pixelMap[x,y]
